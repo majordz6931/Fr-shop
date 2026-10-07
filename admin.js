@@ -1,13 +1,31 @@
-(() => {
-"use strict";
-const sb=window.supabase.createClient(window.FRSHOP_SUPABASE_URL,window.FRSHOP_SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+(()=>{"use strict";
+const sb=window.supabase.createClient(window.FRSHOP_SUPABASE_URL,window.FRSHOP_SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const ADMIN="manseurange@gmail.com",$=s=>document.querySelector(s);let products=[],payments=[],orders=[],store={};
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function showApp(){$("#loginView").hidden=true;$("#appView").hidden=false;load()}
-async function boot(){const {data}=await sb.auth.getSession();if(data.session?.user?.email?.toLowerCase()===ADMIN)showApp();else if(data.session)await sb.auth.signOut()}
-$("#loginForm").onsubmit=async e=>{e.preventDefault();$("#loginStatus").textContent="Connexion…";const {data,error}=await sb.auth.signInWithPassword({email:$("#adminEmail").value.trim(),password:$("#adminPass").value});if(error){$("#loginStatus").textContent=error.message;return}if(data.user?.email?.toLowerCase()!==ADMIN){await sb.auth.signOut();$("#loginStatus").textContent="Compte non autorisé.";return}showApp()};
+function showApp(){$("#loginView").hidden=true;$("#appView").hidden=false;load().catch(e=>console.error(e))}
+async function boot(){try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session?.user?.email?.toLowerCase()===ADMIN)showApp();else if(data.session)await sb.auth.signOut()}catch(e){console.error("Session error:",e)}}
+async function login(email,password){
+  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error("La connexion à Supabase a pris trop de temps. Vérifiez votre connexion Internet puis réessayez.")),15000));
+  const result=await Promise.race([sb.auth.signInWithPassword({email,password}),timeout]);
+  if(result.error)throw result.error;
+  return result.data;
+}
+$("#loginForm").onsubmit=async e=>{
+ e.preventDefault();
+ const status=$("#loginStatus"),button=$("#loginForm button");
+ const email=$("#adminEmail").value.trim().toLowerCase(),password=$("#adminPass").value;
+ status.textContent="Connexion…";button.disabled=true;
+ try{
+   if(email!==ADMIN){status.textContent="Compte non autorisé.";return}
+   const data=await login(email,password);
+   if(data.user?.email?.toLowerCase()!==ADMIN){await sb.auth.signOut();status.textContent="Compte non autorisé.";return}
+   status.textContent="Connexion réussie…";showApp();
+ }catch(error){console.error("Admin login:",error);status.textContent=error?.message||"Échec de connexion."}
+ finally{button.disabled=false}
+};
 $("#logout").onclick=async()=>{await sb.auth.signOut();location.reload()};
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>go(b.dataset.section));document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>go(b.dataset.section));
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
 function go(id){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.section===id));document.querySelectorAll(".view").forEach(x=>x.hidden=x.id!==id);const titles={overview:"Vue générale",products:"Produits",payments:"Paiements",orders:"Commandes",settings:"Paramètres du site"};$("#pageTitle").textContent=titles[id]||"Dashboard"}
 async function load(){const [p,m,o,s]=await Promise.all([sb.from("products").select("*").order("created_at",{ascending:false}),sb.from("payment_methods").select("*").order("id"),sb.from("orders").select("*").order("created_at",{ascending:false}),sb.from("site_settings").select("value").eq("key","store").maybeSingle()]);if(p.error||m.error||o.error||s.error){console.error(p.error,m.error,o.error,s.error);return}products=p.data||[];payments=m.data||[];orders=o.data||[];store=s.data?.value||{};$("#statProducts").textContent=products.length;$("#statPayments").textContent=payments.filter(x=>x.enabled).length;$("#statOrders").textContent=orders.length;$("#statRevenue").textContent=orders.reduce((a,o)=>a+Number(o.total||0),0).toFixed(2)+" USDT";renderProducts();renderPayments();renderOrders();renderSettings();$("#recentOrders").innerHTML=orders.length?orders.slice(0,6).map(orderRow).join(""):"<p class='empty'>Aucune commande.</p>";bindOrders()}
 function orderRow(o){return '<div class="row"><b>'+esc(o.id)+'</b><small>'+esc(o.customer?.name||"Client")+'</small><span>'+Number(o.total||0).toFixed(2)+' USDT</span><button class="mini" data-order="'+esc(o.id)+'">Voir</button></div>'}
