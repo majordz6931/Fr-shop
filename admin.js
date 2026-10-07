@@ -2,7 +2,7 @@
 const sb=window.supabase.createClient(window.FRSHOP_SUPABASE_URL,window.FRSHOP_SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
 const ADMIN="manseurange@gmail.com",$=s=>document.querySelector(s);let products=[],payments=[],orders=[],store={};
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function showApp(){$("#loginView").hidden=true;$("#appView").hidden=false;load().catch(e=>console.error(e))}
+function showApp(){const loginView=$("#loginView"),appView=$("#appView");loginView.hidden=true;loginView.style.display="none";appView.hidden=false;appView.style.display="block";document.body.classList.add("admin-active");load().catch(e=>console.error("Dashboard load:",e))}
 async function boot(){try{const {data,error}=await sb.auth.getSession();if(error)throw error;if(data.session?.user?.email?.toLowerCase()===ADMIN)showApp();else if(data.session)await sb.auth.signOut()}catch(e){console.error("Session error:",e)}}
 async function login(email,password){
   const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error("La connexion à Supabase a pris trop de temps. Vérifiez votre connexion Internet puis réessayez.")),15000));
