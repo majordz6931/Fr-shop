@@ -22,7 +22,6 @@ async function load(){
     $("#paymentGrid").innerHTML='<div class="empty">Impossible de charger les moyens de paiement. Vérifiez les règles RLS de payment_methods.</div>';
   }else{
     payments=pm.data||[];
-    store=arguments[0];
   }
   buildCategories(); render(); buildForms();
 }
