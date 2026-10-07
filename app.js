@@ -36,13 +36,29 @@ function applyStoreSettings(){
 }
 function buildCategories(){const cats=[...new Set(products.map(p=>p.category).filter(Boolean))];$("#categoryList").innerHTML='<button class="cat active-cat" data-cat="">✦<b>Tous les produits</b><small>Afficher tout</small></button>'+cats.map(c=>'<button class="cat" data-cat="'+esc(c)+'">✦<b>'+esc(c)+'</b><small>Découvrir</small></button>').join("");document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active-cat"));b.classList.add("active-cat");render(b.dataset.cat||"")})}
 function render(filter=""){const q=($("#search")?.value||"").trim().toLowerCase();const list=products.filter(p=>(!filter||p.category===filter)&&((p.name||"")+" "+(p.category||"")).toLowerCase().includes(q));$("#productsGrid").innerHTML=list.length?list.map(p=>'<article class="product"><img loading="lazy" src="'+esc(img(p))+'" alt="'+esc(p.name)+'" onerror="this.src=\'https://images.unsplash.com/photo-1517336714739-489689fd1ca8?auto=format&fit=crop&w=900&q=80\'"><div class="body"><small>'+esc(p.category)+'</small><h3>'+esc(p.name)+'</h3><div class="foot"><b>'+money(p.price)+'</b><button class="add" data-id="'+esc(p.id)+'">Ajouter</button></div>'+(p.payment_url?'<a class="product-pay" target="_blank" rel="noopener" href="'+esc(p.payment_url)+'">Paiement direct ↗</a>':"")+'</div></article>').join(""):'<div class="empty">Aucun produit trouvé.</div>';document.querySelectorAll(".add").forEach(b=>b.onclick=()=>{const p=products.find(x=>x.id===b.dataset.id);if(p){cart.push(p);updateCart();$("#cartDrawer").classList.add("open")}})}
+function qrUrl(p){
+  const data=p.wallet_address||p.qr_url||p.url||"";
+  return data?"https://quickchart.io/qr?size=220&margin=2&text="+encodeURIComponent(data):"";
+}
 function renderPayments(){
   $("#paymentGrid").innerHTML=payments.length?payments.map(p=>{
-    const label=[p.name,p.network].filter(Boolean).join(" — ");
-    const qr=p.qr_url?'<a class="payment-qr-link" target="_blank" rel="noopener" href="'+esc(p.qr_url)+'">Voir le QR code ↗</a>':"";
-    const pay=p.url?'<a class="product-pay" target="_blank" rel="noopener" href="'+esc(p.url)+'">Ouvrir le paiement ↗</a>':"";
-    return '<div class="payment"><b>'+esc(p.name||"Paiement")+'</b><small>'+esc(p.network||"Crypto")+'</small><div class="wallet">'+esc(p.wallet_address||"Paiement via Binance / lien")+'</div>'+qr+pay+'</div>';
+    const isBinance=(p.name||"").toLowerCase().includes("binance");
+    const qr=qrUrl(p);
+    const openQr=p.qr_url?'<a class="payment-action secondary" target="_blank" rel="noopener" href="'+esc(p.qr_url)+'">Voir le QR original ↗</a>':"";
+    const payUrl=p.url||p.qr_url;
+    const pay=isBinance&&payUrl?'<a class="payment-action binance" target="_blank" rel="noopener" href="'+esc(payUrl)+'">☰ Ouvrir Binance Pay ↗</a>':"";
+    const code=p.wallet_address?'<div class="payment-code"><span>Code / adresse</span><button type="button" class="copy-code" data-code="'+esc(p.wallet_address)+'">Copier</button><code>'+esc(p.wallet_address)+'</code></div>':"";
+    return '<div class="payment">'+
+      '<div class="payment-top"><div><b>'+esc(p.name||"Paiement")+'</b><small>'+esc(p.network||"Crypto")+'</small></div></div>'+
+      (qr?'<a class="payment-qr" target="_blank" rel="noopener" href="'+esc(qr)+'"><img src="'+esc(qr)+'" alt="QR code '+esc(p.name||"paiement")+'"></a>':"")+
+      code+
+      '<div class="payment-actions">'+openQr+pay+'</div>'+
+    '</div>';
   }).join(""):'<div class="empty">Aucun moyen de paiement disponible.</div>';
+  document.querySelectorAll(".copy-code").forEach(b=>b.onclick=async()=>{
+    try{await navigator.clipboard.writeText(b.dataset.code);b.textContent="Copié ✓";setTimeout(()=>b.textContent="Copier",1400)}
+    catch(e){alert("Copiez le code manuellement.")}
+  });
 }
 function updateCart(){$("#cartCount").textContent=cart.length;$("#cartItems").innerHTML=cart.length?cart.map((p,i)=>'<div class="cartline"><img src="'+esc(img(p))+'" alt=""><div><b>'+esc(p.name)+'</b><br><span>'+money(p.price)+'</span></div><button class="remove" data-i="'+i+'">×</button></div>').join(""):"<p class='empty'>Votre panier est vide.</p>";$("#cartTotal").textContent=money(cart.reduce((s,p)=>s+Number(p.price||0),0));document.querySelectorAll(".remove").forEach(b=>b.onclick=()=>{cart.splice(Number(b.dataset.i),1);updateCart()})}
 function buildForms(){$("#department").innerHTML='<option value="">Département</option>'+deps.map(d=>'<option value="'+esc(d)+'">'+esc(d)+'</option>').join("");$("#paymentMethod").innerHTML='<option value="">Méthode de paiement</option>'+payments.map(p=>'<option value="'+esc((p.name||"")+" — "+(p.network||""))+'">'+esc((p.name||"Paiement")+" — "+(p.network||""))+'</option>').join("")}
