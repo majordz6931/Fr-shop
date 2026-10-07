@@ -16,9 +16,9 @@
     <h1>Bienvenue dans FR SHOP</h1>
     <p>Connectez-vous pour gérer votre boutique.</p>
     <form id="loginForm">
-      <label>Email administrateur<input id="adminEmail" type="email" placeholder="admin@frshop.fr" required></label>
-      <label>Mot de passe<input id="adminPass" type="password" placeholder="••••••••" required></label>
-      <button class="btn btn-primary btn-block" type="submit">Se connecter <span>→</span></button>
+      <label>Email administrateur<input id="adminEmail" type="email" autocomplete="username" placeholder="admin@frshop.fr" required></label>
+      <label>Mot de passe<input id="adminPass" type="password" autocomplete="current-password" placeholder="••••••••" required></label>
+      <button id="loginButton" class="btn btn-primary btn-block" type="submit">Se connecter <span>→</span></button>
     </form>
     <a class="back-link" href="index.html">← Retour à la boutique</a>
   </div>
@@ -107,7 +107,7 @@
 </div></div>
 
 <div id="orderModal" class="modal"><div class="modal-card large"><button class="modal-close" data-close="orderModal">×</button><div id="orderDetails"></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
 <script src="supabase-config.js"></script>
 <script src="admin.js"></script>
 </body></html>
