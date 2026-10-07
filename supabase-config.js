@@ -1,2 +1,0 @@
-window.FRSHOP_SUPABASE_URL="https://zrrisjdkllqwceoodjyl.supabase.co";
-window.FRSHOP_SUPABASE_KEY="sb_publishable_SiC"+"uhyQNNFqxs24u91ZnL"+"g_PBWwPJm6";
