@@ -81,7 +81,11 @@
     <label class="span-2">Nom du produit<input id="pname" required placeholder="Ex. Smartphone Pro X"></label>
     <label>Catégorie<input id="pcat" required placeholder="Smartphones"></label>
     <label>Prix (USDT)<input id="pprice" type="number" min="0" step="0.01" required placeholder="399"></label>
-    <label class="span-2">Images <small>URLs séparées par des virgules</small><textarea id="pimages" rows="3" placeholder="https://.../image1.jpg, https://.../image2.jpg"></textarea></label>
+    <label class="span-2">Images du produit <small>Sélectionnez jusqu'à 3 images depuis votre téléphone ou ordinateur</small>
+<input id="pimagesFile" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+<div id="imagePreview" class="image-upload-preview"></div>
+<input id="pimages" type="hidden">
+</label>
     <label class="span-2">Lien Binance Pay du produit<input id="purl" type="url" placeholder="https://..."></label>
     <label class="check span-2"><input type="checkbox" id="pfeatured"> Mettre ce produit en avant</label>
     <div class="form-actions span-2"><button type="button" class="btn btn-ghost" data-close="productModal">Annuler</button><button class="btn btn-primary" type="submit">Enregistrer</button></div>
