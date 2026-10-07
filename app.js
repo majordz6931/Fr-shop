@@ -30,7 +30,7 @@ function applyStoreSettings(){
   const brand=document.querySelectorAll(".brand");brand.forEach(x=>{x.innerHTML='<span>FR</span> '+esc(s.name||"FR SHOP").replace(/^FR SHOP$/,"SHOP")});
   const h1=document.querySelector(".hero h1");if(h1)h1.innerHTML=esc(s.hero_title||"La technologie")+"<br><em>"+esc(s.hero_emphasis||"sans compromis.")+"</em>";
   const hp=document.querySelector(".hero-copy>p");if(hp)hp.textContent=s.hero_text||"";
-  const banner=document.querySelector(".banner img");if(banner&&s.banner_url)banner.src=s.banner_url;
+  const banner=document.querySelector(".top-banner img");if(banner)banner.src="https://i.ibb.co/bgktf3pT/1791410595006-01a11863-f0db-782b-a6a0-a464b9f2b0cb.png";
   const dp=document.querySelector(".delivery p");if(dp)dp.textContent=s.delivery_text||"";
   const ds=document.querySelector(".delivery>strong");if(ds)ds.innerHTML=esc(s.delivery_price||"0 €")+"<small>"+esc(s.delivery_label||"LIVRAISON")+"</small>";
 }
