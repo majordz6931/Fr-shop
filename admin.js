@@ -5,10 +5,13 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&
 const money=v=>Number(v||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" USDT";
 function toast(msg,error=false){const t=$("#toast");t.textContent=msg;t.className="toast show"+(error?" error":"");clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.className="toast",2800)}
 async function requireAdmin(){
+ try{
  const {data:{user},error}=await supabase.auth.getUser();
- if(error||!user){showLogin();return false}
+ if(error){toast("Erreur de connexion Supabase : "+error.message,true);showLogin();return false}
+ if(!user){showLogin();return false}
  if((user.email||"").toLowerCase()!=="manseurange@gmail.com"){await supabase.auth.signOut();showLogin();toast("Accès administrateur refusé.",true);return false}
  return true
+ }catch(err){showLogin();toast("Erreur : "+(err?.message||err),true);return false}
 }
 function showLogin(){$("#loginView").classList.remove("hidden");$("#appView").classList.add("hidden")}
 async function loadAll(){const [pr,pa,or]=await Promise.all([supabase.from("products").select("*").order("created_at",{ascending:false}),supabase.from("payment_methods").select("*").order("created_at",{ascending:false}),supabase.from("orders").select("*").order("created_at",{ascending:false})]);if(pr.error)throw pr.error;if(pa.error)throw pa.error;if(or.error)throw or.error;products=(pr.data||[]).map(p=>({...p,images:Array.isArray(p.images)?p.images:[],paymentUrl:p.payment_url||""}));payments=pa.data||[];orders=or.data||[];renderAll()}
@@ -59,11 +62,17 @@ function openModal(id){$("#"+id).classList.add("show")}function closeModal(id){$
 function setup(){$$("[data-section]").forEach(b=>b.onclick=()=>go(b.dataset.section));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));$$("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));["productModal","paymentModal","orderModal"].forEach(id=>$("#"+id).addEventListener("click",e=>{if(e.target.id===id)closeModal(id)}));$("#newProduct").onclick=newProduct;$("#pimagesFile").onchange=()=>{const files=[...$("#pimagesFile").files];if(files.length>3){toast("Maximum 3 images.",true);$("#pimagesFile").value="";return}$("#imagePreview").innerHTML=selectedProductImages.map((u,i)=>"<div class=\"upload-thumb\"><img src=\""+esc(u)+"\"></div>").join("")+files.map(f=>"<div class=\"upload-thumb\"><img src=\""+URL.createObjectURL(f)+"\"></div>").join("")};$("#quickProduct").onclick=newProduct;$("#newPayment").onclick=newPayment;$("#productForm").onsubmit=saveProduct;$("#paymentForm").onsubmit=savePayment;$("#productSearch").oninput=renderProducts;$("#productCategory").onchange=renderProducts;$("#orderSearch").oninput=renderOrders;$("#refreshOrders").onclick=()=>loadAll().catch(e=>toast(e.message,true));$("#menuBtn").onclick=()=>$("#sidebar").classList.toggle("open");$("#logout").onclick=async()=>{await supabase.auth.signOut();showLogin()};
 $("#loginForm").onsubmit=async e=>{
  e.preventDefault();
- const email=$("#adminEmail").value.trim().toLowerCase(),password=$("#adminPass").value;
- const {error}=await supabase.auth.signInWithPassword({email,password});
- if(error){toast("Email ou mot de passe incorrect.",true);return}
- if(!(await requireAdmin()))return;
- showApp();
+ const btn=$("#loginButton");
+ btn.disabled=true;btn.innerHTML="Connexion...";
+ try{
+  const email=$("#adminEmail").value.trim().toLowerCase(),password=$("#adminPass").value;
+  if(!email||!password){toast("Veuillez saisir l’email et le mot de passe.",true);return}
+  const {data,error}=await supabase.auth.signInWithPassword({email,password});
+  if(error){toast("Connexion refusée : "+error.message,true);return}
+  if(!data?.user){toast("Connexion non confirmée.",true);return}
+  if(!(await requireAdmin()))return;
+  await showApp();
+ }catch(err){toast("Erreur de connexion : "+(err?.message||err),true)}finally{btn.disabled=false;btn.innerHTML="Se connecter <span>→</span>"}
 }
 }
 async function showApp(){
