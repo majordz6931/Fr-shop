@@ -22,9 +22,9 @@ function renderProducts(){const q=$("#productSearch")?.value.toLowerCase()||"",c
 function renderPayments(){$("#paymentGrid").innerHTML=payments.length?payments.map(p=>'<article class="payment-card"><div class="payment-top"><div class="payment-title"><span class="coin-icon">₿</span><div><h3>'+esc(p.name)+'</h3><small>'+esc(p.network||"Réseau non défini")+'</small></div></div><span class="status '+(p.enabled?"on":"off")+'">'+(p.enabled?"Actif":"Désactivé")+'</span></div>'+(p.wallet_address?'<div class="wallet">'+esc(p.wallet_address)+'</div>':"")+(p.qr_url?'<img class="qr" src="'+esc(p.qr_url)+'" alt="QR">':"")+'<div class="actions"><button class="btn btn-ghost" onclick="editPayment('+Number(p.id)+')">Modifier</button><button class="btn btn-danger" onclick="deletePayment('+Number(p.id)+')">Supprimer</button></div></article>').join(""):"<div class='empty-state'>Aucun moyen de paiement.</div>"}
 function customer(o){return o.customer||{}}
 function renderOrders(){const q=$("#orderSearch")?.value.toLowerCase()||"",list=orders.filter(o=>{const c=customer(o);return !q||[o.id,c.name,c.email,c.city].join(" ").toLowerCase().includes(q)});$("#ordersTable").innerHTML=list.length?list.map(o=>{const c=customer(o);return '<div class="order-row"><div><span class="order-id">'+esc(o.id)+'</span><small>'+new Date(o.created_at).toLocaleString("fr-FR")+'</small></div><div><strong>'+esc(c.name||"Client")+'</strong><small>'+esc(c.email||"")+'</small></div><div><strong>'+money(o.total)+'</strong><small>'+esc(o.payment||"")+'</small></div><div><span class="status '+(o.payment_screenshot_path?"on":"off")+'">'+(o.payment_screenshot_path?"Preuve reçue":"Sans preuve")+'</span></div><button class="btn btn-ghost" onclick="showOrder(\''+esc(o.id)+'\')">Détails</button></div>'}).join(""):"<div class='empty-state'>Aucune commande.</div>"}
-function renderRecent(){const list=orders.slice(0,5);$("#recentOrders").innerHTML=list.length?'<table class="order-table"><thead><tr><th>Commande</th><th>Client</th><th>Total</th><th></th></tr></thead><tbody>'+list.map(o=>{const c=customer(o);return '<tr><td><b>'+esc(o.id)+'</b></td><td>'+esc(c.name||"—")+'</td><td><b>'+money(o.total)+'</b></td><td><button class="text-btn" onclick="showOrder(\''+esc(o.id)+'\')">Voir</button></td></tr>'}).join("")+'</tbody></table>':"<div class='empty-state'>Aucune commande.</div>"}
-function renderPopular(){$("#popularProducts").innerHTML=products.slice(0,5).map(p=>'<div class="mini-item"><img src="'+esc(productImage(p))+'" alt=""><div><strong>'+esc(p.name)+'</strong><small>'+money(p.price)+'</small></div></div>').join("")||"<div class='empty-state'>Aucun produit.</div>"}
-function fillCategories(){const cur=$("#productCategory").value,cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort();$("#productCategory").innerHTML='<option value="">Toutes les catégories</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");$("#productCategory").value=cur}
+function renderRecent(){const target=$("#recentOrders");if(!target)return;const list=orders.slice(0,5);target.innerHTML=list.length?'<table class="order-table"><thead><tr><th>Commande</th><th>Client</th><th>Total</th><th></th></tr></thead><tbody>'+list.map(o=>{const c=customer(o);return '<tr><td><b>'+esc(o.id)+'</b></td><td>'+esc(c.name||"—")+'</td><td><b>'+money(o.total)+'</b></td><td><button class="text-btn" onclick="showOrder(\''+esc(o.id)+'\')">Voir</button></td></tr>'}).join("")+'</tbody></table>':"<div class='empty-state'>Aucune commande.</div>"}
+function renderPopular(){const target=$("#popularProducts");if(!target)return;target.innerHTML=products.slice(0,5).map(p=>'<div class="mini-item"><img src="'+esc(productImage(p))+'" alt=""><div><strong>'+esc(p.name)+'</strong><small>'+money(p.price)+'</small></div></div>').join("")||"<div class='empty-state'>Aucun produit.</div>"}
+function fillCategories(){const select=$("#productCategory");if(!select)return;const cur=select.value,cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort();select.innerHTML='<option value="">Toutes les catégories</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");select.value=cur}
 async function uploadProductImages(productId){
  const files=[...($("#pimagesFile").files||[])];
  if(!files.length)return selectedProductImages;
@@ -59,21 +59,43 @@ window.editPayment=id=>{const p=payments.find(x=>Number(x.id)===Number(id));if(!
 window.deletePayment=async id=>{if(!confirm("Supprimer ce moyen de paiement ?"))return;const r=await supabase.from("payment_methods").delete().eq("id",id);if(r.error)return toast("Suppression impossible : "+r.error.message,true);toast("Paiement supprimé.");await loadAll()}
 window.showOrder=id=>{const o=orders.find(x=>x.id===id);if(!o)return;const c=customer(o);let proof="";if(o.payment_screenshot_path){const u=supabase.storage.from("payment-screenshots").getPublicUrl(o.payment_screenshot_path);proof='<h3>Preuve de paiement</h3><a href="'+esc(u.data.publicUrl)+'" target="_blank"><img class="proof" src="'+esc(u.data.publicUrl)+'" alt="Preuve"></a>'}$("#orderDetails").innerHTML='<span class="eyebrow">COMMANDE</span><h2>'+esc(o.id)+'</h2><div class="order-detail-grid"><div class="detail-box"><small>Client</small><strong>'+esc(c.name||"—")+'</strong></div><div class="detail-box"><small>Email</small><strong>'+esc(c.email||"—")+'</strong></div><div class="detail-box"><small>Téléphone</small><strong>'+esc(c.phone||"—")+'</strong></div><div class="detail-box"><small>Adresse</small><strong>'+esc([c.address,c.city,c.postal,c.region].filter(Boolean).join(", ")||"—")+'</strong></div><div class="detail-box"><small>Total</small><strong>'+money(o.total)+'</strong></div><div class="detail-box"><small>Paiement</small><strong>'+esc(o.payment||"—")+'</strong></div></div>'+proof+'<h3>Articles</h3><pre style="white-space:pre-wrap;background:#f8fafc;padding:14px;border-radius:12px;overflow:auto">'+esc(JSON.stringify(o.items||[],null,2))+'</pre>';openModal("orderModal")}
 function openModal(id){$("#"+id).classList.add("show")}function closeModal(id){$("#"+id).classList.remove("show")}function renderImagePreview(){$("#imagePreview").innerHTML=selectedProductImages.map((u,i)=>"<div class=\"upload-thumb\"><img src=\""+esc(u)+"\"><button type=\"button\" onclick=\"removeProductImage("+i+")\">×</button></div>").join("")}window.removeProductImage=i=>{selectedProductImages.splice(i,1);renderImagePreview()};function newProduct(){selectedProductImages=[];$("#productForm").reset();$("#pid").value="";$("#productModalTitle").textContent="Nouveau produit";openModal("productModal")}function newPayment(){editingPaymentId=null;$("#paymentForm").reset();$("#payEnabled").checked=true;$("#paymentModalTitle").textContent="Nouveau moyen";openModal("paymentModal")}function go(section){$$(".section-page").forEach(x=>x.classList.toggle("active",x.id===section));$$(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.section===section));$("#sidebar").classList.remove("open")}
-function setup(){$$("[data-section]").forEach(b=>b.onclick=()=>go(b.dataset.section));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));$$("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));["productModal","paymentModal","orderModal"].forEach(id=>$("#"+id).addEventListener("click",e=>{if(e.target.id===id)closeModal(id)}));$("#newProduct").onclick=newProduct;$("#pimagesFile").onchange=()=>{const files=[...$("#pimagesFile").files];if(files.length>3){toast("Maximum 3 images.",true);$("#pimagesFile").value="";return}$("#imagePreview").innerHTML=selectedProductImages.map((u,i)=>"<div class=\"upload-thumb\"><img src=\""+esc(u)+"\"></div>").join("")+files.map(f=>"<div class=\"upload-thumb\"><img src=\""+URL.createObjectURL(f)+"\"></div>").join("")};$("#quickProduct").onclick=newProduct;$("#newPayment").onclick=newPayment;$("#productForm").onsubmit=saveProduct;$("#paymentForm").onsubmit=savePayment;$("#productSearch").oninput=renderProducts;$("#productCategory").onchange=renderProducts;$("#orderSearch").oninput=renderOrders;$("#refreshOrders").onclick=()=>loadAll().catch(e=>toast(e.message,true));$("#menuBtn").onclick=()=>$("#sidebar").classList.toggle("open");$("#logout").onclick=async()=>{await supabase.auth.signOut();showLogin()};
-$("#loginForm").onsubmit=async e=>{
- e.preventDefault();
- const btn=$("#loginButton");
- btn.disabled=true;btn.innerHTML="Connexion...";
- try{
-  const email=$("#adminEmail").value.trim().toLowerCase(),password=$("#adminPass").value;
-  if(!email||!password){toast("Veuillez saisir l’email et le mot de passe.",true);return}
-  const {data,error}=await supabase.auth.signInWithPassword({email,password});
-  if(error){toast("Connexion refusée : "+error.message,true);return}
-  if(!data?.user){toast("Connexion non confirmée.",true);return}
-  if(!(await requireAdmin()))return;
-  await showApp();
- }catch(err){toast("Erreur de connexion : "+(err?.message||err),true)}finally{btn.disabled=false;btn.innerHTML="Se connecter <span>→</span>"}
-}
+function setup(){
+  $$("[data-section]").forEach(b=>b.onclick=()=>go(b.dataset.section));
+  $$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+  $$("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
+  ["productModal","paymentModal","orderModal"].forEach(id=>{const el=$("#"+id);if(el)el.addEventListener("click",e=>{if(e.target.id===id)closeModal(id)})});
+  const bind=(id,event,fn)=>{const el=$(id);if(el)el[event]=fn};
+  bind("#newProduct","onclick",newProduct);
+  bind("#quickProduct","onclick",newProduct);
+  bind("#newPayment","onclick",newPayment);
+  bind("#productForm","onsubmit",saveProduct);
+  bind("#paymentForm","onsubmit",savePayment);
+  bind("#productSearch","oninput",renderProducts);
+  bind("#productCategory","onchange",renderProducts);
+  bind("#orderSearch","oninput",renderOrders);
+  bind("#refreshOrders","onclick",()=>loadAll().catch(e=>toast(e.message,true)));
+  bind("#menuBtn","onclick",()=>$("#sidebar")?.classList.toggle("open"));
+  bind("#logout","onclick",async()=>{await supabase.auth.signOut();showLogin()});
+
+  const login=$("#loginForm");
+  if(login) login.onsubmit=async e=>{
+    e.preventDefault();
+    const btn=$("#loginButton");
+    if(btn){btn.disabled=true;btn.textContent="Connexion..."}
+    try{
+      const email=$("#adminEmail")?.value.trim().toLowerCase()||"",password=$("#adminPass")?.value||"";
+      if(!email||!password){toast("Veuillez saisir l’email et le mot de passe.",true);return}
+      const {data,error}=await supabase.auth.signInWithPassword({email,password});
+      if(error){toast("Connexion refusée : "+error.message,true);return}
+      if(!data?.user){toast("Connexion non confirmée.",true);return}
+      if(!(await requireAdmin()))return;
+      await showApp();
+    }catch(err){toast("Erreur de connexion : "+(err?.message||err),true)}
+    finally{if(btn){btn.disabled=false;btn.textContent="Se connecter →"}}
+  };
+
+  const file=$("#pimagesFile");
+  if(file)file.onchange=()=>{const files=[...file.files];if(files.length>3){toast("Maximum 3 images.",true);file.value="";return}const preview=$("#imagePreview");if(preview)preview.innerHTML=selectedProductImages.map(u=>"<div class=\\"upload-thumb\\"><img src=\\""+esc(u)+"\\"></div>").join("")+files.map(f=>"<div class=\\"upload-thumb\\"><img src=\\""+URL.createObjectURL(f)+"\\"></div>").join("")};
 }
 async function showApp(){
  if(!(await requireAdmin()))return;
