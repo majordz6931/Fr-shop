@@ -1,1 +1,109 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FR SHOP — Administration</title><link rel="stylesheet" href="styles.css"></head><body><header class="topbar"><div class="container nav"><a class="brand" href="index.html"><span class="brand-mark">FR</span><span>FR SHOP ADMIN</span></a><a class="primary" href="index.html">Voir la boutique</a></div></header><main class="container" style="padding:35px 0 60px"><div id="login"><div class="modal-card" style="margin:auto"><h2>Administration</h2><p class="muted">Entrez votre mot de passe administrateur.</p><form id="loginForm"><input id="adminEmail" type="email" placeholder="Email administrateur" required><input id="adminPass" type="password" placeholder="Mot de passe" required><button class="primary" type="submit">Connexion</button></form></div></div><div id="panel" class="hidden"><div class="section-head"><div><h1>Tableau de bord</h1><p>Gérez produits, paiements et commandes.</p></div><button class="primary" id="logout">Déconnexion</button></div><div class="admin-grid"><section class="admin-card"><h2>Ajouter / modifier un produit</h2><form id="productForm"><input type="hidden" id="pid"><input id="pname" placeholder="Nom du produit" required><div class="two"><input id="pcat" placeholder="Catégorie" required><input id="pprice" type="number" min="0" step="0.01" placeholder="Prix USDT" required></div><input id="pimages" placeholder="URLs des images, séparées par une virgule"><input id="purl" placeholder="Lien Binance du produit"><label><input type="checkbox" id="pfeatured"> Produit mis en avant</label><button class="primary" type="submit">Enregistrer le produit</button></form></section><section class="admin-card"><h2>Moyens de paiement crypto</h2><form id="payForm"><input id="payName" placeholder="Nom (ex. USDT BEP20)" required><input id="payNetwork" placeholder="Réseau (ex. BEP20)"><input id="payWallet" placeholder="Adresse Wallet"><input id="payQr" placeholder="Lien QR ImgBB"><input id="payUrl" placeholder="Lien de paiement optionnel"><label><input type="checkbox" id="payEnabled" checked> Activé</label><button class="primary" type="submit">Ajouter le paiement</button></form><div id="payList"></div></section></div><section class="admin-card" style="margin-top:20px"><h2>Produits</h2><div id="adminProducts"></div></section><section class="admin-card" style="margin-top:20px"><h2>Commandes</h2><div id="orders"></div></section></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="admin.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>FR SHOP — Dashboard</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div id="toast" class="toast"></div>
+<div id="loginView" class="login-shell">
+  <div class="login-card">
+    <div class="login-logo">FR</div>
+    <span class="eyebrow">ESPACE ADMIN</span>
+    <h1>Bienvenue dans FR SHOP</h1>
+    <p>Connectez-vous pour gérer votre boutique.</p>
+    <form id="loginForm">
+      <label>Email administrateur<input id="adminEmail" type="email" placeholder="admin@frshop.fr" required></label>
+      <label>Mot de passe<input id="adminPass" type="password" placeholder="••••••••" required></label>
+      <button class="btn btn-primary btn-block" type="submit">Se connecter <span>→</span></button>
+    </form>
+    <a class="back-link" href="index.html">← Retour à la boutique</a>
+  </div>
+</div>
+
+<div id="appView" class="app-shell hidden">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-brand"><span class="brand-mark">FR</span><div><strong>FR SHOP</strong><small>Administration</small></div></div>
+    <nav class="side-nav">
+      <button class="nav-item active" data-section="overview">⌂ <span>Vue d'ensemble</span></button>
+      <button class="nav-item" data-section="products">▣ <span>Produits</span></button>
+      <button class="nav-item" data-section="payments">◈ <span>Paiements</span></button>
+      <button class="nav-item" data-section="orders">▤ <span>Commandes</span></button>
+    </nav>
+    <div class="side-bottom">
+      <a href="index.html" target="_blank">↗ Voir la boutique</a>
+      <button id="logout">⇥ Déconnexion</button>
+    </div>
+  </aside>
+  <main class="main">
+    <header class="mobile-header"><button id="menuBtn">☰</button><strong>FR SHOP</strong><a href="index.html">↗</a></header>
+
+    <section id="overview" class="section-page active">
+      <div class="page-head"><div><span class="eyebrow">TABLEAU DE BORD</span><h1>Vue d'ensemble</h1><p>Gérez votre boutique depuis un seul espace.</p></div><button class="btn btn-primary" id="quickProduct">+ Nouveau produit</button></div>
+      <div class="stats">
+        <article class="stat-card"><span class="stat-icon blue">▣</span><div><small>Produits</small><strong id="statProducts">0</strong></div></article>
+        <article class="stat-card"><span class="stat-icon purple">◈</span><div><small>Paiements actifs</small><strong id="statPayments">0</strong></div></article>
+        <article class="stat-card"><span class="stat-icon orange">▤</span><div><small>Commandes</small><strong id="statOrders">0</strong></div></article>
+        <article class="stat-card"><span class="stat-icon green">₮</span><div><small>Chiffre d'affaires</small><strong id="statRevenue">0 USDT</strong></div></article>
+      </div>
+      <div class="dashboard-grid">
+        <section class="panel"><div class="panel-head"><div><h2>Commandes récentes</h2><small>Dernières commandes reçues</small></div><button class="text-btn" data-go="orders">Voir tout →</button></div><div id="recentOrders" class="table-wrap"></div></section>
+        <section class="panel"><div class="panel-head"><div><h2>Produits populaires</h2><small>Catalogue actuel</small></div><button class="text-btn" data-go="products">Gérer →</button></div><div id="popularProducts" class="mini-list"></div></section>
+      </div>
+    </section>
+
+    <section id="products" class="section-page">
+      <div class="page-head"><div><span class="eyebrow">CATALOGUE</span><h1>Produits</h1><p>Ajoutez et modifiez vos produits.</p></div><button class="btn btn-primary" id="newProduct">+ Ajouter un produit</button></div>
+      <div class="toolbar"><div class="searchbox">⌕<input id="productSearch" placeholder="Rechercher un produit..."></div><select id="productCategory"><option value="">Toutes les catégories</option></select></div>
+      <div id="productGrid" class="product-admin-grid"></div>
+    </section>
+
+    <section id="payments" class="section-page">
+      <div class="page-head"><div><span class="eyebrow">CONFIGURATION</span><h1>Moyens de paiement</h1><p>Gérez Binance Pay, wallets crypto et QR codes.</p></div><button class="btn btn-primary" id="newPayment">+ Ajouter un paiement</button></div>
+      <div id="paymentGrid" class="payment-grid"></div>
+    </section>
+
+    <section id="orders" class="section-page">
+      <div class="page-head"><div><span class="eyebrow">VENTES</span><h1>Commandes</h1><p>Consultez les commandes et les preuves de paiement.</p></div><button class="btn btn-ghost" id="refreshOrders">↻ Actualiser</button></div>
+      <div class="toolbar"><div class="searchbox">⌕<input id="orderSearch" placeholder="ID, client, email..."></div></div>
+      <div id="ordersTable" class="orders-table"></div>
+    </section>
+  </main>
+</div>
+
+<div id="productModal" class="modal"><div class="modal-card large">
+  <button class="modal-close" data-close="productModal">×</button><span class="eyebrow">CATALOGUE</span><h2 id="productModalTitle">Nouveau produit</h2>
+  <form id="productForm" class="form-grid">
+    <input type="hidden" id="pid">
+    <label class="span-2">Nom du produit<input id="pname" required placeholder="Ex. Smartphone Pro X"></label>
+    <label>Catégorie<input id="pcat" required placeholder="Smartphones"></label>
+    <label>Prix (USDT)<input id="pprice" type="number" min="0" step="0.01" required placeholder="399"></label>
+    <label class="span-2">Images <small>URLs séparées par des virgules</small><textarea id="pimages" rows="3" placeholder="https://.../image1.jpg, https://.../image2.jpg"></textarea></label>
+    <label class="span-2">Lien Binance Pay du produit<input id="purl" type="url" placeholder="https://..."></label>
+    <label class="check span-2"><input type="checkbox" id="pfeatured"> Mettre ce produit en avant</label>
+    <div class="form-actions span-2"><button type="button" class="btn btn-ghost" data-close="productModal">Annuler</button><button class="btn btn-primary" type="submit">Enregistrer</button></div>
+  </form>
+</div></div>
+
+<div id="paymentModal" class="modal"><div class="modal-card">
+  <button class="modal-close" data-close="paymentModal">×</button><span class="eyebrow">PAIEMENT</span><h2 id="paymentModalTitle">Nouveau moyen</h2>
+  <form id="paymentForm" class="form-grid">
+    <input type="hidden" id="payId">
+    <label class="span-2">Nom<input id="payName" required placeholder="USDT — BNB Smart Chain"></label>
+    <label>Réseau<input id="payNetwork" placeholder="BEP20"></label>
+    <label>Adresse Wallet<input id="payWallet" placeholder="0x..."></label>
+    <label class="span-2">URL du QR code<input id="payQr" type="url" placeholder="https://..."></label>
+    <label class="span-2">Lien de paiement optionnel<input id="payUrl" type="url" placeholder="https://..."></label>
+    <label class="check span-2"><input type="checkbox" id="payEnabled" checked> Moyen de paiement actif</label>
+    <div class="form-actions span-2"><button type="button" class="btn btn-ghost" data-close="paymentModal">Annuler</button><button class="btn btn-primary" type="submit">Enregistrer</button></div>
+  </form>
+</div></div>
+
+<div id="orderModal" class="modal"><div class="modal-card large"><button class="modal-close" data-close="orderModal">×</button><div id="orderDetails"></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="admin.js"></script>
+</body></html>
