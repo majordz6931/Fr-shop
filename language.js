@@ -19,6 +19,37 @@ Object.assign(D.en,{
 Object.assign(D.ar,{"Les":"الـ","cryptomonnaies et":"العملات الرقمية و","ainsi que les":"وكذلك","lorsque cette option est":"عندما يكون هذا الخيار","disponible.":"متاحًا.","Choisissez votre moyen":"اختر وسيلة","de paiement, effectuez le":"الدفع، وأتمّ","paiement puis joignez la":"الدفع ثم أرفق","capture demandée lors de":"صورة الإثبات المطلوبة أثناء","la commande.":"الطلب.","Où puis-je acheter une carte":"أين يمكنني شراء بطاقة","cadeau Binance ?":"هدايا Binance؟","Un lien direct vers la recherche Eneba est":"يوجد رابط مباشر للبحث في Eneba","disponible dans la section Paiement.":"ضمن قسم الدفع.","Non. La disponibilité et les frais de livraison dépendent du pays de destination.":"لا. يعتمد توفر التوصيل وتكاليفه على بلد الوجهة.","La disponibilité et les frais de livraison dépendent de la destination.":"يعتمد توفر التوصيل وتكاليفه على الوجهة.","Choisissez votre pays et indiquez votre adresse lors de la commande.":"اختر بلدك وأدخل عنوانك عند الطلب.","Les cryptomonnaies et Binance Pay,":"العملات الرقمية وBinance Pay،","lorsque cette option est disponible.":"عندما يكون هذا الخيار متاحًا."});
 Object.assign(D.en,{"Les":"The","cryptomonnaies et":"cryptocurrencies and","ainsi que les":"as well as","lorsque cette option est":"when this option is","disponible.":"available.","Choisissez votre moyen":"Choose your","de paiement, effectuez le":"payment method, complete the","paiement puis joignez la":"payment, then attach the","capture demandée lors de":"screenshot requested during","la commande.":"checkout.","Où puis-je acheter une carte":"Where can I buy a","cadeau Binance ?":"Binance gift card?","Un lien direct vers la recherche Eneba est":"A direct link to Eneba search is","disponible dans la section Paiement.":"available in the Payment section.","Non. La disponibilité et les frais de livraison dépendent du pays de destination.":"No. Delivery availability and fees depend on the destination country.","La disponibilité et les frais de livraison dépendent de la destination.":"Delivery availability and fees depend on the destination.","Choisissez votre pays et indiquez votre adresse lors de la commande.":"Choose your country and enter your address at checkout."});
 
+Object.assign(D.ar,{
+"sélectionnés pour une expérience premium.":"مختارة لتجربة مميزة.",
+"crypto et commandes internationales.":"الدفع بالعملات الرقمية والطلبات الدولية.",
+"Crypto et commandes internationales.":"الدفع بالعملات الرقمية والطلبات الدولية.",
+"sélectionnés pour une expérience premium":"مختارة لتجربة مميزة",
+"crypto et commandes internationales":"الدفع بالعملات الرقمية والطلبات الدولية"
+});
+Object.assign(D.en,{
+"sélectionnés pour une expérience premium.":"selected for a premium experience.",
+"crypto et commandes internationales.":"Crypto payments and international orders.",
+"Crypto et commandes internationales.":"Crypto payments and international orders.",
+"sélectionnés pour une expérience premium":"selected for a premium experience",
+"crypto et commandes internationales":"Crypto payments and international orders"
+});
+Object.assign(D.pt,{
+"sélectionnés pour une expérience premium.":"selecionados para uma experiência premium.",
+"crypto et commandes internationales.":"pagamentos em criptomoedas e encomendas internacionais."
+});
+Object.assign(D.es,{
+"sélectionnés pour une expérience premium.":"seleccionados para una experiencia premium.",
+"crypto et commandes internationales.":"pagos con criptomonedas y pedidos internacionales."
+});
+Object.assign(D.de,{
+"sélectionnés pour une expérience premium.":"für ein Premium-Erlebnis ausgewählt.",
+"crypto et commandes internationales.":"Kryptozahlungen und internationale Bestellungen."
+});
+Object.assign(D.it,{
+"sélectionnés pour une expérience premium.":"selezionati per un'esperienza premium.",
+"crypto et commandes internationales.":"pagamenti in criptovalute e ordini internazionali."
+});
+
 let current="fr";try{current=localStorage.getItem("topshop-language")||""}catch(e){}const browser=(navigator.language||"fr").split("-")[0];if(!langs.some(x=>x[0]===current))current=langs.some(x=>x[0]===browser)?browser:"fr";
 const original=new WeakMap(), originalAttr=new WeakMap();
 function translateText(node,lang){if(!original.has(node))original.set(node,node.nodeValue);const src=original.get(node),dict=D[lang]||{};const trimmed=src.trim();if(!trimmed)return;let out=dict[trimmed];if(!out){out=src;const keys=Object.keys(dict).sort((a,b)=>b.length-a.length);for(const k of keys){if(k.length>4&&out.includes(k))out=out.split(k).join(dict[k]);}}if(node.nodeValue!==out)node.nodeValue=out}
